@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <div class="card shadow-sm p-4">
+
+            <h3 class="text-center mb-3">Login</h3>
+
+            <!-- Google Login Button -->
+            <a href="/login/google" class="btn btn-danger w-100 mb-3" style="background-color:#db4437; border:none;">
+                <i class="bi bi-google"></i> Login with Google
+            </a>
+
+            <div class="text-center my-3">
+                <span style="font-size: 0.9rem; color: #888;">or</span>
+            </div>
+
+            <!-- Existing Email/Password Form -->
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="mb-3">
+                    <label>Email</label>
+                    <input type="text" name="email" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Password</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+
+                <button type="submit" class="btn btn-dark w-100">Login</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
