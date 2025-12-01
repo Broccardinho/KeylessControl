@@ -5,3 +5,8 @@ body {
 .card {
     border-radius: 10px;
 }
+.hero-section {
+    background-size: cover;
+    background-position: center;
+}
+
