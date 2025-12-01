@@ -46,6 +46,17 @@ def get_db():
         database=DB_NAME,
         cursorclass=pymysql.cursors.DictCursor
     )
+DB_HOST = os.environ.get("DB_HOST")
+DB_USER = os.environ.get("DB_USER")
+DB_PASS = os.environ.get("DB_PASS")
+DB_NAME = os.environ.get("DB_NAME")
+
+
+DB_HOST = "127.0.0.1"
+DB_USER = "root"
+DB_PASS = ""     # empty password for XAMPP
+DB_NAME = "keylesscontrol"
+
 
 
 # -------------------------------------------------------
@@ -110,9 +121,22 @@ def home():
     return render_template("index.html", title="Home")
 
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == "POST":
+
+        # Create a fake logged-in user session
+        session["google_user"] = {
+            "name": "Alice Johnson",
+            "sub": 1
+        }
+
+        return redirect("/dashboard")
+
     return render_template("login.html", title="Login")
+
+
+
 
 
 @app.route('/dashboard')
@@ -129,9 +153,45 @@ def dashboard():
         title="Dashboard"
     )
 
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+    
+    if request.method == "POST":
+        name = request.form["name"]
+        age = request.form["age"]
+        image = request.files["image"]
+
+        if image and allowed_file(image.filename):
+            filename = image.filename
+            save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            image.save(save_path)
+
+            # path to store in MySQL (not absolute)
+            db_path = f"/static/uploads/{filename}"
+
+            # store in DB
+            db = get_db()
+            with db.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO Users (name, age, date_of_registration, image_path)
+                    VALUES (%s, %s, CURDATE(), %s)
+                """, (name, age, db_path))
+                db.commit()
+            db.close()
+
+            return redirect("/dashboard")
+
+    return render_template("upload.html")
+
+
 
 @app.route('/control', methods=['GET', 'POST'])
 def control():
+    session["google_user"] = {
+        "name": "Alice Johnson",
+        "sub": 1
+    }
+
     if "google_user" not in session:
         return redirect(url_for("login"))
 
@@ -148,10 +208,26 @@ def control():
 
 @app.route('/send_unlock', methods=['POST'])
 def send_unlock():
+    session["google_user"] = {
+        "name": "Alice Johnson",
+        "sub": 1
+    }
     if "google_user" not in session:
         return redirect(url_for("login"))
 
-    log_unlock_event()
+    password = request.form.get("password")
+
+    global door_status
+
+    # If password empty → stay locked
+    if not password or password.strip() == "":
+        door_status = "Locked"
+        return redirect(url_for("control"))
+
+    # If password entered → unlock + log it
+    door_status = "Unlocked"
+    log_unlock_event()    # Logs to MySQL and sends PubNub update
+
     return redirect(url_for("control"))
 
 
@@ -242,6 +318,15 @@ def google_callback():
     session["google_user"] = id_info
 
     return redirect("/dashboard")
+
+UPLOAD_FOLDER = os.path.join(os.getcwd(), "static", "uploads")
+ALLOWED_EXT = {"png", "jpg", "jpeg"}
+
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
+
 
 
 # -------------------------------------------------------

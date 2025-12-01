@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5" style="max-width: 600px;">
+    <div class="card p-4 shadow-sm">
+
+        <h3 class="mb-3 text-center">Upload User Face</h3>
+
+        <form method="POST" action="/upload" enctype="multipart/form-data">
+
+            <div class="mb-3">
+                <label>Name:</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label>Age:</label>
+                <input type="number" name="age" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label>Select Face Image:</label>
+                <input type="file" name="image" class="form-control" accept="image/*" required>
+            </div>
+
+            <button class="btn btn-dark w-100">Upload</button>
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}
