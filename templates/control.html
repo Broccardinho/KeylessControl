@@ -13,23 +13,27 @@
         {% endif %}
     </p>
 
+    <!-- Unlock -->
     <form id="unlockForm" method="POST" action="{{ url_for('send_unlock') }}">
         <input type="hidden" id="passwordInput" name="password">
-        <button class="btn btn-success w-100" type="button" onclick="unlockPassword()">Unlock Door</button>
+        <button class="btn btn-success w-100 mb-2" type="button" onclick="unlockPassword()">Unlock Door</button>
+    </form>
+
+    <!-- Lock -->
+    <form method="POST" action="{{ url_for('send_lock') }}">
+        <button class="btn btn-danger w-100" type="submit">Lock Door</button>
     </form>
 </div>
+
 
 <script>
 function unlockPassword() {
     let pwd = prompt("Enter password to unlock:");
-    if (pwd === null) return;  // User clicked cancel
-    if (pwd.trim() === "") return;  // Empty password not allowed
-
+    if (!pwd) return;
     document.getElementById("passwordInput").value = pwd;
     document.getElementById("unlockForm").submit();
 }
 </script>
-
 
 <div class="card p-4 shadow-sm">
     <p><strong>Create User & Upload Face</strong></p>

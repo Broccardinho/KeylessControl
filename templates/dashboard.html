@@ -12,7 +12,14 @@
             {% for log in logs %}
                 <li class="list-group-item">
                     <strong>{{ log.name }}</strong>
-                    unlocked the door at 
+
+                    {% if log.action == "Locked" %}
+                        <span class="text-danger">locked</span>
+                    {% else %}
+                        <span class="text-success">unlocked</span>
+                    {% endif %}
+
+                    the door at 
                     <span class="text-primary">{{ log.log_datetime }}</span>
                 </li>
             {% endfor %}

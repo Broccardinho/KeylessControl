@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from werkzeug.security import generate_password_hash, check_password_hash
 import time
 import os
 import pymysql
@@ -124,18 +125,54 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
 
-        # Create a fake logged-in user session
-        session["google_user"] = {
-            "name": "Alice Johnson",
-            "sub": 1
-        }
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute("SELECT user_id, username, password_hash FROM accounts WHERE email = %s", (email,))
+            account = cursor.fetchone()
 
-        return redirect("/dashboard")
+        if account and check_password_hash(account["password_hash"], password):
+            session["auth_user"] = {
+                "user_id": account["user_id"],
+                "name": account["username"]
+            }
+            return redirect("/dashboard")
+
+        return render_template("login.html", title="Login", error="Invalid login")
 
     return render_template("login.html", title="Login")
 
 
+
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+
+        email = request.form["email"]
+        username = request.form["username"]
+        password = request.form["password"]
+
+        password_hash = generate_password_hash(password)
+
+        db = get_db()
+        with db.cursor() as cursor:
+            try:
+                cursor.execute(
+                    "INSERT INTO accounts (email, username, password_hash) VALUES (%s, %s, %s)",
+                    (email, username, password_hash)
+                )
+                db.commit()
+            except pymysql.err.IntegrityError:
+                return render_template("signup.html", error="Email or username already exists")
+
+        db.close()
+
+        return redirect("/login")
+
+    return render_template("signup.html")
 
 
 
@@ -208,35 +245,65 @@ def control():
 
 @app.route('/send_unlock', methods=['POST'])
 def send_unlock():
-    session["google_user"] = {
-        "name": "Alice Johnson",
-        "sub": 1
-    }
-    if "google_user" not in session:
-        return redirect(url_for("login"))
+    # Ensure user is logged in
+    user = session.get("auth_user")
+    if not user:
+        return redirect("/login")
 
     password = request.form.get("password")
 
     global door_status
 
-    # If password empty → stay locked
+    # If no password → stay locked
     if not password or password.strip() == "":
         door_status = "Locked"
         return redirect(url_for("control"))
 
-    # If password entered → unlock + log it
+    # Password entered → unlock
     door_status = "Unlocked"
-    log_unlock_event()    # Logs to MySQL and sends PubNub update
+
+    user_id = user["user_id"]
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+
+    db = get_db()
+    with db.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO logtimes (user_id, action, log_datetime) VALUES (%s, %s, %s)",
+            (user_id, "Unlocked", timestamp)
+        )
+    db.commit()
+    db.close()
+
+    # Optional PubNub update
+    pubnub.publish().channel("door_updates").message({
+        "status": "Unlocked",
+        "timestamp": timestamp
+    }).sync()
 
     return redirect(url_for("control"))
 
 
-@app.route('/send_face', methods=['POST'])
-def send_face():
-    if "google_user" not in session:
-        return redirect(url_for("login"))
+@app.route('/send_lock', methods=['POST'])
+def send_lock():
+    user = session.get("auth_user")
+    if not user:
+        return redirect("/login")
 
-    print("Face image sent (simulated)")
+    global door_status
+    door_status = "Locked"
+
+    user_id = user["user_id"]
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+
+    db = get_db()
+    with db.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO logtimes (user_id, action, log_datetime) VALUES (%s, %s, %s)",
+            (user_id, "Locked", timestamp)
+        )
+    db.commit()
+    db.close()
+
     return redirect(url_for("control"))
 
 
