@@ -1,9 +1,42 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Door Lock Test</title>
-</head>
-<body>
-    <h1>test</h1>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+
+<div class="hero-section text-center text-white d-flex flex-column justify-content-center align-items-center"
+     style="height: 60vh; background: linear-gradient(135deg, #2a5298, #1e3c72);">
+
+    <h1 class="display-4 fw-bold mb-3">Welcome to KeylessControl</h1>
+    <p class="lead mb-4">Secure, smart, facial-recognition access — anytime, anywhere.</p>
+
+    <a href="/login" class="btn btn-light btn-lg px-4 py-2">Login</a>
+    <a class="btn btn-primary mt-3" href="/signup">Create Account</a>
+</div>
+
+<div class="container py-5">
+
+    <div class="row text-center">
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm p-4 h-100">
+                <h4 class="fw-semibold">🔐 Secure Access</h4>
+                <p>Face verification ensures only authorised users can enter.</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm p-4 h-100">
+                <h4 class="fw-semibold">📸 Easy Face Upload</h4>
+                <p>Upload a face image directly from your browser.</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm p-4 h-100">
+                <h4 class="fw-semibold">📊 Live Activity Logs</h4>
+                <p>Track all unlock attempts in real-time.</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,19 +1,43 @@
 {% extends "base.html" %}
 {% block content %}
+
 <h2>Control Panel</h2>
 <p class="text-muted">Manage your door lock system</p>
 
 <div class="card p-4 shadow-sm mb-3">
-    <p><strong>Door Status:</strong> {{ door_status }}</p>
-    <form method="POST" action="{{ url_for('send_unlock') }}">
-        <button class="btn btn-success w-100">Unlock Door</button>
+    <p><strong>Door Status:</strong> 
+        {% if door_status == "Unlocked" %}
+            <span style="color: green; font-weight: bold;">Unlocked 🟢</span>
+        {% else %}
+            <span style="color: red; font-weight: bold;">Locked 🔴</span>
+        {% endif %}
+    </p>
+
+    <!-- Unlock -->
+    <form id="unlockForm" method="POST" action="{{ url_for('send_unlock') }}">
+        <input type="hidden" id="passwordInput" name="password">
+        <button class="btn btn-success w-100 mb-2" type="button" onclick="unlockPassword()">Unlock Door</button>
+    </form>
+
+    <!-- Lock -->
+    <form method="POST" action="{{ url_for('send_lock') }}">
+        <button class="btn btn-danger w-100" type="submit">Lock Door</button>
     </form>
 </div>
 
+
+<script>
+function unlockPassword() {
+    let pwd = prompt("Enter password to unlock:");
+    if (!pwd) return;
+    document.getElementById("passwordInput").value = pwd;
+    document.getElementById("unlockForm").submit();
+}
+</script>
+
 <div class="card p-4 shadow-sm">
-    <p><strong>Send Face Image</strong></p>
-    <form method="POST" action="{{ url_for('send_face') }}">
-        <button class="btn btn-primary w-100">Send Test Face</button>
-    </form>
+    <p><strong>Create User & Upload Face</strong></p>
+    <a href="/upload" class="btn btn-primary w-100">Upload Face Image</a>
 </div>
+
 {% endblock %}

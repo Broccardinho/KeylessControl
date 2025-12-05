@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 500px;">
+    <div class="card p-4 shadow-sm">
+
+        <h3 class="text-center">Create an Account</h3>
+
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/signup">
+
+            <label>Email:</label>
+            <input type="email" name="email" class="form-control mb-3" required>
+
+            <label>Username:</label>
+            <input type="text" name="username" class="form-control mb-3" required>
+
+            <label>Password:</label>
+            <input type="password" name="password" class="form-control mb-3" required>
+
+            <button class="btn btn-primary w-100">Create Account</button>
+        </form>
+
+    </div>
+</div>
+{% endblock %}
