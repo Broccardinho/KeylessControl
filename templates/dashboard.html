@@ -11,7 +11,8 @@
         <ul class="list-group">
             {% for log in logs %}
                 <li class="list-group-item">
-                    <strong>{{ log.name }}</strong>
+
+                    <strong>{{ log.username if log.username else "Unknown User" }}</strong>
 
                     {% if log.action == "Locked" %}
                         <span class="text-danger">locked</span>
@@ -19,8 +20,13 @@
                         <span class="text-success">unlocked</span>
                     {% endif %}
 
-                    the door at 
-                    <span class="text-primary">{{ log.log_datetime }}</span>
+                    the door at
+                    <span class="text-primary">{{ log.timestamp }}</span>
+
+                    {% if log.ip_address %}
+                        <small class="text-muted">({{ log.ip_address }})</small>
+                    {% endif %}
+
                 </li>
             {% endfor %}
         </ul>

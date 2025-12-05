@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Edit Profile</h2>
+
+<form method="POST" class="card p-4" style="max-width: 400px;">
+    <label class="form-label">Name</label>
+    <input class="form-control" name="name" value="{{ user.name }}" required>
+
+    <label class="form-label mt-3">Age</label>
+    <input class="form-control" type="number" name="age" value="{{ user.age }}">
+
+    <button class="btn btn-success mt-3" type="submit">Save Changes</button>
+</form>
+
+{% endblock %}
