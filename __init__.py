@@ -7,6 +7,7 @@ import requests
 
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
+from .face_recognition import compare_to_database
 
 # Google OAuth
 from google_auth_oauthlib.flow import Flow
@@ -96,24 +97,20 @@ def log_action(user_id: int, action: str):
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
     }).sync()
 
-
 def get_logs(limit: int = 50):
-    """
-    Fetch recent logs, joined with accounts.username.
-    """
     db = get_db()
     with db.cursor() as cursor:
         cursor.execute(
             """
-SELECT 
-    logtimes.timestamp,
-    logtimes.action,
-    logtimes.ip_address,
-    accounts.username
-FROM logtimes
-LEFT JOIN accounts ON accounts.user_id = logtimes.user_id
-ORDER BY logtimes.timestamp DESC;
-            LIMIT %s;
+            SELECT 
+                logtimes.timestamp,
+                logtimes.action,
+                logtimes.ip_address,
+                accounts.username
+            FROM logtimes
+            LEFT JOIN accounts ON accounts.user_id = logtimes.user_id
+            ORDER BY logtimes.timestamp DESC
+            LIMIT %s
             """,
             (limit,)
         )
@@ -546,6 +543,51 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
 
+# -------------------------------------------------------
+# racongition Config
+# -------------------------------------------------------
+
+@app.route("/recognize", methods=["GET", "POST"])
+def recognize():
+    must_login = require_login()
+    if must_login:
+        return must_login
+
+    if request.method == "POST":
+        image = request.files.get("image")
+
+        if not image:
+            return render_template("recognize.html", error="No image uploaded")
+
+        # Save uploaded image temporarily
+        temp_path = os.path.join(UPLOAD_FOLDER, "temp_recognition.jpg")
+        image.save(temp_path)
+
+        # Load all users
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute("SELECT user_id, name, image FROM Users")
+            users = cursor.fetchall()
+        db.close()
+
+        # Compare uploaded image vs DB
+        match, user_row = compare_to_database(temp_path, users)
+
+        if match:
+            return render_template(
+                "recognize_result.html",
+                status="match",
+                user=user_row
+            )
+
+        return render_template(
+            "recognize_result.html",
+            status="nomatch",
+            user=None
+        )
+
+    # GET request → render form
+    return render_template("recognize.html")
 
 # -------------------------------------------------------
 # Local run
